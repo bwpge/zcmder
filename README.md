@@ -39,3 +39,5 @@ To update, pull any new commits from this repository:
 ```sh
 cd "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/zcmder" && git pull
 ```
+
+Be sure to reload (e.g., `omz reload`) or source the new file (e.g., `source zcmder.zsh-theme`) for any active sessions.
