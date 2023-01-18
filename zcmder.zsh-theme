@@ -116,7 +116,8 @@ __zcmder_git_prompt() {
         branch_color="$ZCMDER_GIT_BRANCH_STAGED_COLOR"
     fi
     # if no modifier was set by this point, then repo is clean
-    [[ -z "$branch_modifier" ]] && branch_modifier="$ZSH_THEME_GIT_PROMPT_CLEAN"
+    # but don't set if this a new repo
+    [[ -z "$branch_modifier" && "$branch" != "$ZCMDER_GIT_BRANCH_NEW_NAME" ]] && branch_modifier="$ZSH_THEME_GIT_PROMPT_CLEAN"
 
     echo " on %{$fg[$branch_color]%}${ZSH_THEME_GIT_PROMPT_PREFIX}${branch:gs/%/%%}${upstream:gs/%/%%}$branch_modifier$branch_suffix$stash_modifier${ZSH_THEME_GIT_PROMPT_SUFFIX}%{$reset_color%}"
 }
