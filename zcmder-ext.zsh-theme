@@ -21,7 +21,6 @@ ZSH_THEME_GIT_PROMPT_BEHIND=" ↓"
 ZSH_THEME_GIT_PROMPT_DIVERGED=" ↑↓"
 ZSH_THEME_GIT_PROMPT_EQUAL_REMOTE=
 ZSH_THEME_GIT_PROMPT_STASHED=" ⚑"
-ZSH_THEME_GIT_PROMPT_UNMERGED=" ⚡"
 
 # same approach as git.zsh so that we don't mess with the user git commands
 __zcmder_git() {
@@ -61,11 +60,19 @@ __zcmder_git_prompt() {
 	for line in $status_lines; do
 		# check for a remote status
 		if [[ "$line" =~ "^## [^ ]+ \[(.*)\]" ]]; then
-			case "$match" in
-				behind*)	BEHIND+=1;;
-				ahead*)		AHEAD+=1;;
-				diverged*)	DIVERGED+=1;;
-			esac
+            branch_statuses=("${(@s/,/)match}")
+            for branch_status in $branch_statuses; do
+                if [[ ! $branch_status =~ "(behind|diverged|ahead) ([0-9]+)?" ]]; then
+                    continue
+                fi
+                if [[ $match[1] == 'diverged' ]]; then
+                    DIVERGED+=${+match[2]}
+                elif [[ $match[1] == 'ahead' ]]; then
+                    AHEAD+=${+match[2]}
+                elif [[ $match[1] == 'behind' ]]; then
+                    BEHIND+=${+match[2]}
+                fi
+            done
 		elif [[ "${line:0:2}" == "##" ]]; then
 			continue
 		else
@@ -85,7 +92,7 @@ __zcmder_git_prompt() {
 	#echo -n " >>AHEAD:$AHEAD|BEHIND:$BEHIND<< "
 
 	local branch_suffix=""
-	if (( $DIVERGED )); then
+	if (( $DIVERGED )) || [[ $AHEAD -gt 0 && $BEHIND -gt 0 ]]; then
 		branch_suffix="$ZSH_THEME_GIT_PROMPT_DIVERGED"
 	elif (( $BEHIND )); then
 		branch_suffix="$ZSH_THEME_GIT_PROMPT_BEHIND"
@@ -99,7 +106,7 @@ __zcmder_git_prompt() {
 	fi
 
     # determine what to color the branch based on status
-	if (( $UNMERGED )); then
+	if (( $UNMERGED )) || (( $DIVERGED )) || [[ $AHEAD -gt 0 && $BEHIND -gt 0 ]]; then
 		branch_color="$ZCMDER_GIT_BRANCH_UNMERGED_COLOR"
 	elif (( $UNTRACKED )); then
 		branch_color="$ZCMDER_GIT_BRANCH_UNTRACKED_COLOR"
