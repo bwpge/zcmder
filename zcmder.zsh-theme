@@ -54,7 +54,7 @@ __zcmder_git_prompt() {
 			&& upstream=":${upstream}"
 	fi
 
-	local -i AHEAD BEHIND DIVERGED UNTRACKED ADDED MODIFIED RENAMED DELETED UNMERGED STASHED
+	local -i AHEAD BEHIND DIVERGED CHANGED UNTRACKED UNMERGED STASHED
 	status_text="$(git status --porcelain -b 2>/dev/null)"
 	status_lines=("${(@f)${status_text}}")
 	for line in $status_lines; do
@@ -77,19 +77,17 @@ __zcmder_git_prompt() {
 			continue
 		else
 			case "${line:0:2}" in
-				'??')						UNTRACKED+=1;;
-				'A ' | 'M ')				ADDED+=1;;
-				'MM' | 'AM' | ' M' | ' T')	MODIFIED+=1;;
-				'R ')						RENAMED+=1;;
-				'D ')						DELETED+=1;;
-				'UU')						UNMERGED+=1;;
+				'??')   UNTRACKED+=1;;
+				'UU')   UNMERGED+=1;;
+				*)      CHANGED+=1;;
 			esac
 		fi
 	done
 
 	# check for any stashes
 	STASHED=$(__zcmder_git rev-parse --verify refs/stash 2>/dev/null | wc -l)
-	#echo -n " >>AHEAD:$AHEAD|BEHIND:$BEHIND<< "
+    local stash_modifier=""
+	(( $STASHED )) && stash_modifier="$ZSH_THEME_GIT_PROMPT_STASHED"
 
 	local branch_suffix=""
 	if (( $DIVERGED )) || [[ $AHEAD -gt 0 && $BEHIND -gt 0 ]]; then
@@ -101,7 +99,7 @@ __zcmder_git_prompt() {
 	fi
 
 	local branch_modifier=""
-	if (( $UNMERGED+$UNTRACKED+$MODIFIED+$RENAMED+$DELETED+$ADDED )); then
+	if (( $UNMERGED+$UNTRACKED+$CHANGED )); then
 		branch_modifier="$ZSH_THEME_GIT_PROMPT_DIRTY"
 	fi
 
@@ -110,15 +108,15 @@ __zcmder_git_prompt() {
 		branch_color="$ZCMDER_GIT_BRANCH_UNMERGED_COLOR"
 	elif (( $UNTRACKED )); then
 		branch_color="$ZCMDER_GIT_BRANCH_UNTRACKED_COLOR"
-	elif (( $MODIFIED+$RENAMED+$DELETED )); then
+	elif (( $CHANGED )); then
 		branch_color="$ZCMDER_GIT_BRANCH_MODIFIED_COLOR"
-	elif (( $ADDED )); then
-		branch_color="$ZCMDER_GIT_BRANCH_STAGED_COLOR"
 	fi
-	[[ -z "$branch_modifier" ]] && branch_modifier="$ZSH_THEME_GIT_PROMPT_CLEAN"
-
-	local stash_modifier=""
-	(( $STASHED )) && stash_modifier="$ZSH_THEME_GIT_PROMPT_STASHED"
+    # check if all changes are staged
+    if __zcmder_git diff --exit-code &>/dev/null && ! __zcmder_git diff --cached --exit-code &>/dev/null; then 
+        branch_color="$ZCMDER_GIT_BRANCH_STAGED_COLOR"
+    fi
+    # if no modifier was set by this point, then repo is clean
+    [[ -z "$branch_modifier" ]] && branch_modifier="$ZSH_THEME_GIT_PROMPT_CLEAN"
 
 	echo " on %{$fg[$branch_color]%}${ZSH_THEME_GIT_PROMPT_PREFIX}${branch:gs/%/%%}${upstream:gs/%/%%}$branch_modifier$branch_suffix$stash_modifier${ZSH_THEME_GIT_PROMPT_SUFFIX}%{$reset_color%}"
 }
