@@ -1,4 +1,4 @@
-# zcmder-ext
+# zcmder
 
 A `zsh` theme inspired by [Cmder](https://cmder.app/) with some additional `git` related prompt features.
 
@@ -9,13 +9,13 @@ A `zsh` theme inspired by [Cmder](https://cmder.app/) with some additional `git`
 Clone this repository into your `.oh-my-zsh/custom/themes` directory:
 
 ```sh
-git clone https://github.com/bwpge/zcmder-ext "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/zcmder-ext"
+git clone https://github.com/bwpge/zcmder "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/zcmder"
 ```
 
 Set the theme in your `.zshrc`:
 
 ```sh
-ZSH_THEME=zcmder-ext/zcmder-ext
+ZSH_THEME=zcmder/zcmder
 ```
 
 ### Manual
@@ -23,13 +23,13 @@ ZSH_THEME=zcmder-ext/zcmder-ext
 Clone this repository to your machine (e.g., `~/.zsh`):
 
 ```sh
-git clone https://github.com/bwpge/zcmder-ext ~/.zsh/zcmder-ext
+git clone https://github.com/bwpge/zcmder ~/.zsh/zcmder
 ```
 
 Source the theme in your `.zshrc`:
 
 ```sh
-source ~/.zsh/zcmder-ext/zcmder-ext.zsh-theme
+source ~/.zsh/zcmder/zcmder.zsh-theme
 ```
 
 ## Updating
@@ -37,5 +37,5 @@ source ~/.zsh/zcmder-ext/zcmder-ext.zsh-theme
 To update, pull any new commits from this repository:
 
 ```sh
-cd "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/zcmder-ext" && git pull
+cd "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/zcmder" && git pull
 ```
