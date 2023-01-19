@@ -127,7 +127,7 @@ __zcmder_root() {
 }
 
 __zcmder_pwd() {
-    [ -w $(pwd) ] && echo -n "%{$fg[$ZCMDER_DIR_COLOR]%}" || echo -n "%{$fg[$ZCMDER_DIR_READONLY_COLOR]%}$ZCMDER_READONLY_PREFIX"
+    [ -w "$(pwd)" ] && echo -n "%{$fg[$ZCMDER_DIR_COLOR]%}" || echo -n "%{$fg[$ZCMDER_DIR_READONLY_COLOR]%}$ZCMDER_DIR_READONLY_PREFIX"
     echo -n "%~%{$reset_color%}"
 }
 
