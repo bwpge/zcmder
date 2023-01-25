@@ -2,7 +2,7 @@
 
 A `zsh` theme inspired by [Cmder](https://cmder.app/) with some additional `git` related prompt features.
 
-<p align="center"><img src="preview.png"></p>
+<p align="center"><img src="assets/preview.png"></p>
 
 ## Installation
 
