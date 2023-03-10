@@ -10,6 +10,8 @@ ZCMDER_GIT_BRANCH_MODIFIED_COLOR="yellow"
 ZCMDER_GIT_BRANCH_UNTRACKED_COLOR="red"
 ZCMDER_GIT_BRANCH_UNMERGED_COLOR="magenta"
 ZCMDER_GIT_BRANCH_STAGED_COLOR="blue"
+ZCMDER_CARET_COLOR=8
+ZCMDER_CARET_ERROR_COLOR=red
 
 # set zsh theme options
 ZSH_THEME_GIT_PROMPT_PREFIX=" "
@@ -133,6 +135,6 @@ __zcmder_pwd() {
 
 PROMPT='$(__zcmder_root)$(__zcmder_pwd)\
 $(__zcmder_git_prompt)
-%(?:%{$fg[black]%}:%{$fg[red]%})λ%{$reset_color%} '
-PS2='%{$fg[black]%}%_>%{$reset_color%} '
-PS3='%{$fg[black]%}?>%{$reset_color%} '
+%(?:%F{$ZCMDER_CARET_COLOR%}:%{$fg[$ZCMDER_CARET_ERROR_COLOR]%})λ%{$reset_color%} '
+PS2='%F{$ZCMDER_CARET_COLOR%}%_>%{$reset_color%} '
+PS3='%F{$ZCMDER_CARET_COLOR%}?>%{$reset_color%} '
