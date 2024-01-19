@@ -1,28 +1,53 @@
-# set zcmder theme options
-ZCMDER_ROOT_COLOR="red"
-ZCMDER_DIR_COLOR="green"
-ZCMDER_DIR_READONLY_COLOR="red"
-ZCMDER_DIR_READONLY_PREFIX=" "
-ZCMDER_GIT_BRANCH_NEW_NAME="(new)"
-ZCMDER_GIT_BRANCH_NEW_COLOR="black"
-ZCMDER_GIT_BRANCH_COLOR="cyan"
-ZCMDER_GIT_BRANCH_MODIFIED_COLOR="yellow"
-ZCMDER_GIT_BRANCH_UNTRACKED_COLOR="red"
-ZCMDER_GIT_BRANCH_UNMERGED_COLOR="magenta"
-ZCMDER_GIT_BRANCH_STAGED_COLOR="blue"
-ZCMDER_CARET_COLOR=8
-ZCMDER_CARET_ERROR_COLOR=red
+# set zsh theme options unless disabled
+if [ -z "$ZCMDER_NO_MODIFY_ZSH_THEME" ]; then
+    ZSH_THEME_GIT_PROMPT_PREFIX=" "
+    ZSH_THEME_GIT_PROMPT_SUFFIX=""
+    ZSH_THEME_GIT_PROMPT_DIRTY=" *"
+    ZSH_THEME_GIT_PROMPT_CLEAN=" ✓"
+    ZSH_THEME_GIT_PROMPT_AHEAD=" ↑"
+    ZSH_THEME_GIT_PROMPT_BEHIND=" ↓"
+    ZSH_THEME_GIT_PROMPT_DIVERGED=" ↑↓"
+    ZSH_THEME_GIT_PROMPT_EQUAL_REMOTE=""
+    ZSH_THEME_GIT_PROMPT_STASHED=" ⚑"
+fi
 
-# set zsh theme options
-ZSH_THEME_GIT_PROMPT_PREFIX=" "
-ZSH_THEME_GIT_PROMPT_SUFFIX=""
-ZSH_THEME_GIT_PROMPT_DIRTY="*"
-ZSH_THEME_GIT_PROMPT_CLEAN=" ✓"
-ZSH_THEME_GIT_PROMPT_AHEAD=" ↑"
-ZSH_THEME_GIT_PROMPT_BEHIND=" ↓"
-ZSH_THEME_GIT_PROMPT_DIVERGED=" ↑↓"
-ZSH_THEME_GIT_PROMPT_EQUAL_REMOTE=
-ZSH_THEME_GIT_PROMPT_STASHED=" ⚑"
+unset ZCMDER_OPTIONS
+declare -A ZCMDER_OPTIONS=(
+    [newline_before_prompt]=true
+    [git_show_remote]=false
+)
+
+declare -A ZCMDER_COLORS=(
+    [caret]="black"
+    [caret_error]="red"
+    [cwd]="green"
+    [cwd_readonly]="red"
+    [git_branch_default]="cyan"
+    [git_modified]="yellow"
+    [git_new_repo]="black"
+    [git_staged]="blue"
+    [git_unmerged]="magenta"
+    [git_untracked]="red"
+    [hostname]="blue"
+    [python_env]="black"
+    [username]="blue"
+)
+
+declare -A ZCMDER_STRINGS=(
+    [caret]="λ"
+    [caret_root]="#"
+    [git_ahead_postfix]="${ZSH_THEME_GIT_PROMPT_AHEAD:- ↑}"
+    [git_behind_postfix]="${ZSH_THEME_GIT_PROMPT_BEHIND:- ↓}"
+    [git_clean_postfix]="${ZSH_THEME_GIT_PROMPT_CLEAN:- ✓}"
+    [git_dirty_postfix]="${ZSH_THEME_GIT_PROMPT_DIRTY:- *}"
+    [git_diverged_postfix]="${ZSH_THEME_GIT_PROMPT_DIVERGED:- ↑↓}"
+    [git_label_new]="(new)"
+    [git_prefix]="${ZSH_THEME_GIT_PROMPT_PREFIX:- }"
+    [git_suffix]="${ZSH_THEME_GIT_PROMPT_SUFFIX:-}"
+    [git_separator]=" on "
+    [git_stashed_modifier]="${ZSH_THEME_GIT_PROMPT_STASHED:- ⚑}"
+    [readonly_prefix]=" "
+)
 
 # same approach as git.zsh so that we don't mess with the user git commands
 __zcmder_git() {
@@ -35,13 +60,13 @@ __zcmder_git_prompt() {
         return 0
     fi
 
-    local branch_color="$ZCMDER_GIT_BRANCH_COLOR"
+    local branch_color="$ZCMDER_COLORS[git_branch_default]"
     local branch=""
 
     # check if a new repo
     if [[ $(__zcmder_git rev-parse --abbrev-ref HEAD 2>/dev/null) == "HEAD" && -z "$(__zcmder_git rev-parse --short HEAD 2>/dev/null)" ]]; then
-        branch="$ZCMDER_GIT_BRANCH_NEW_NAME"
-        branch_color="$ZCMDER_GIT_BRANCH_NEW_COLOR"
+        branch="$ZCMDER_STRINGS[git_label_new]"
+        branch_color="$ZCMDER_COLORS[git_new_repo]"
     # otherwise use a branch name/tag/commit sha
     else
         branch=$(__zcmder_git symbolic-ref --short HEAD 2>/dev/null) \
@@ -107,34 +132,42 @@ __zcmder_git_prompt() {
 
     # determine what to color the branch based on status
     if (( $UNMERGED )) || (( $DIVERGED )) || [[ $AHEAD -gt 0 && $BEHIND -gt 0 ]]; then
-        branch_color="$ZCMDER_GIT_BRANCH_UNMERGED_COLOR"
+        branch_color="$ZCMDER_COLORS[git_unmerged]"
     elif (( $UNTRACKED )); then
-        branch_color="$ZCMDER_GIT_BRANCH_UNTRACKED_COLOR"
+        branch_color="$ZCMDER_COLORS[git_untracked]"
     elif (( $CHANGED )); then
-        branch_color="$ZCMDER_GIT_BRANCH_MODIFIED_COLOR"
+        branch_color="$ZCMDER_COLORS[git_modified]"
     fi
     # check if all changes are staged
     if __zcmder_git diff --exit-code &>/dev/null && ! __zcmder_git diff --cached --exit-code &>/dev/null; then
-        branch_color="$ZCMDER_GIT_BRANCH_STAGED_COLOR"
+        branch_color="$ZCMDER_COLORS[git_staged]"
     fi
     # if no modifier was set by this point, then repo is clean
     # but don't set if this a new repo
-    [[ -z "$branch_modifier" && "$branch" != "$ZCMDER_GIT_BRANCH_NEW_NAME" ]] && branch_modifier="$ZSH_THEME_GIT_PROMPT_CLEAN"
+    [[ -z "$branch_modifier" && "$branch" != "$ZCMDER_STRINGS[git_label_new]" ]] && branch_modifier="$ZSH_THEME_GIT_PROMPT_CLEAN"
 
-    echo " on %{$fg[$branch_color]%}${ZSH_THEME_GIT_PROMPT_PREFIX}${branch:gs/%/%%}${upstream:gs/%/%%}$branch_modifier$branch_suffix$stash_modifier${ZSH_THEME_GIT_PROMPT_SUFFIX}%{$reset_color%}"
-}
-
-__zcmder_root() {
-    echo -n "%(!.%{$fg[$ZCMDER_ROOT_COLOR]%}%n%{$reset_color%}:.)"
+    echo "$ZCMDER_STRINGS[git_separator]%{$fg[$branch_color]%}$ZCMDER_STRINGS[git_prefix]${branch:gs/%/%%}${upstream:gs/%/%%}$branch_modifier$branch_suffix$stash_modifier$ZCMDER_STRINGS[git_suffix]%{$reset_color%}"
 }
 
 __zcmder_pwd() {
-    [ -w "$(pwd)" ] && echo -n "%{$fg[$ZCMDER_DIR_COLOR]%}" || echo -n "%{$fg[$ZCMDER_DIR_READONLY_COLOR]%}$ZCMDER_DIR_READONLY_PREFIX"
-    echo -n "%~%{$reset_color%}"
+    [ -w "$(pwd)" ] && echo -n "%{$fg[$ZCMDER_COLORS[cwd]]%}" || echo -n "%{$fg[$ZCMDER_COLORS[cwd_readonly]]%}$ZCMDER_STRINGS[readonly_prefix]"
+    print "%~%{$reset_color%}"
 }
 
-PROMPT='$(__zcmder_root)$(__zcmder_pwd)\
-$(__zcmder_git_prompt)
-%(?:%F{$ZCMDER_CARET_COLOR%}:%{$fg[$ZCMDER_CARET_ERROR_COLOR]%})λ%{$reset_color%} '
-PS2='%F{$ZCMDER_CARET_COLOR%}%_>%{$reset_color%} '
-PS3='%F{$ZCMDER_CARET_COLOR%}?>%{$reset_color%} '
+__zcmder_caret() {
+    print "%(!.$ZCMDER_STRINGS[caret_root].$ZCMDER_STRINGS[caret])"
+}
+
+# see: https://stackoverflow.com/a/60790101
+autoload -Uz add-zsh-hook
+__zcmder_precmd() {
+    $funcstack[1]() {
+        [ $ZCMDER_OPTIONS[newline_before_prompt] = true ] && echo
+    }
+}
+add-zsh-hook precmd __zcmder_precmd
+
+PROMPT='$(__zcmder_pwd)$(__zcmder_git_prompt)
+%(?:%{$fg[$ZCMDER_COLORS[caret]]%}:%{$fg[$ZCMDER_COLORS[caret_error]]%})$(__zcmder_caret)%{$reset_color%} '
+PS2='%{$fg[$ZCMDER_COLORS[caret]]%}%_>%{$reset_color%} '
+PS3='%{$fg[$ZCMDER_COLORS[caret]]%}?>%{$reset_color%} '
