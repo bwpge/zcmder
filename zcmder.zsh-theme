@@ -1,5 +1,5 @@
 # set zsh theme options unless disabled
-if [ -z "$ZCMDER_NO_MODIFY_ZSH_THEME" ]; then
+if ! (( ${+ZCMDER_NO_MODIFY_ZSH_THEME} )); then
     ZSH_THEME_GIT_PROMPT_PREFIX=" "
     ZSH_THEME_GIT_PROMPT_SUFFIX=""
     ZSH_THEME_GIT_PROMPT_DIRTY=" *"
@@ -11,10 +11,14 @@ if [ -z "$ZCMDER_NO_MODIFY_ZSH_THEME" ]; then
     ZSH_THEME_GIT_PROMPT_STASHED=" ⚑"
 fi
 
-unset ZCMDER_OPTIONS
-declare -A ZCMDER_OPTIONS=(
-    [newline_before_prompt]=true
-    [git_show_remote]=false
+unset ZCMDER_COLORS ZCMDER_COMPONENTS ZCMDER_OPTIONS ZCMDER_STRINGS
+
+declare -A ZCMDER_COMPONENTS=(
+    [cwd]=true
+    [git_status]=true
+    [hostname]=false
+    [python_env]=true
+    [username]=false
 )
 
 declare -A ZCMDER_COLORS=(
@@ -33,6 +37,11 @@ declare -A ZCMDER_COLORS=(
     [username]="blue"
 )
 
+declare -A ZCMDER_OPTIONS=(
+    [git_show_remote]=false
+    [newline_before_prompt]=true
+)
+
 declare -A ZCMDER_STRINGS=(
     [caret]="λ"
     [caret_root]="#"
@@ -43,9 +52,9 @@ declare -A ZCMDER_STRINGS=(
     [git_diverged_postfix]="${ZSH_THEME_GIT_PROMPT_DIVERGED:- ↑↓}"
     [git_label_new]="(new)"
     [git_prefix]="${ZSH_THEME_GIT_PROMPT_PREFIX:- }"
-    [git_suffix]="${ZSH_THEME_GIT_PROMPT_SUFFIX:-}"
     [git_separator]=" on "
     [git_stashed_modifier]="${ZSH_THEME_GIT_PROMPT_STASHED:- ⚑}"
+    [git_suffix]="${ZSH_THEME_GIT_PROMPT_SUFFIX:-}"
     [readonly_prefix]=" "
 )
 
@@ -75,13 +84,14 @@ __zcmder_git_prompt() {
             || return 0
     fi
 
-    local upstream=""
-    if (( ${+ZSH_THEME_GIT_SHOW_UPSTREAM} )); then
-        upstream=$(__zcmder_git rev-parse --abbrev-ref --symbolic-full-name "@{upstream}" 2>/dev/null) \
-            && upstream=":${upstream}"
+    # set remote label (avoid git call if not needed)
+    local remote=""
+    if [ ${ZCMDER_OPTIONS[git_show_remote]} ]; then
+        remote=$(__zcmder_git rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null) \
+            && remote=":${remote}"
     fi
 
-    local -i AHEAD BEHIND DIVERGED CHANGED UNTRACKED UNMERGED STASHED
+    local -i AHEAD BEHIND DIVERGED CHANGES MODIFIED UNTRACKED UNMERGED STASHED STAGED
     status_text="$(git status --porcelain -b 2>/dev/null)"
     status_lines=("${(@f)${status_text}}")
     for line in $status_lines; do
@@ -103,53 +113,58 @@ __zcmder_git_prompt() {
         elif [[ "${line:0:2}" == "##" ]]; then
             continue
         else
+            CHANGES+=1
             case "${line:0:2}" in
-                '??')   UNTRACKED+=1;;
-                'UU')   UNMERGED+=1;;
-                *)      CHANGED+=1;;
+                '?'*)      UNTRACKED+=1;;
+                'U'*)      UNMERGED+=1;;
+                *'M'|' '*) MODIFIED+=1;;
+                *)         STAGED+=1;;
             esac
         fi
     done
 
+    # get status modifiers from local changes
+    local branch_modifier=""
+    if (( $CHANGES )); then
+        branch_modifier="$ZCMDER_STRINGS[git_dirty_postfix]"
+    # otherwise repo is clean, but don't show if in a new repo
+    elif [[ -z "$branch_modifier" && "$branch" != "$ZCMDER_STRINGS[git_label_new]" ]]; then
+        branch_modifier="$ZCMDER_STRINGS[git_clean_postfix]"
+    fi
+
     # check for any stashes
     STASHED=$(__zcmder_git rev-parse --verify refs/stash 2>/dev/null | wc -l)
     local stash_modifier=""
-    (( $STASHED )) && stash_modifier="$ZSH_THEME_GIT_PROMPT_STASHED"
+    (( $STASHED )) && stash_modifier="$ZCMDER_STRINGS[git_stashed_modifier]"
 
+    # branch suffix from remote status
     local branch_suffix=""
     if (( $DIVERGED )) || [[ $AHEAD -gt 0 && $BEHIND -gt 0 ]]; then
-        branch_suffix="$ZSH_THEME_GIT_PROMPT_DIVERGED"
+        branch_suffix="$ZCMDER_STRINGS[git_diverged_postfix]"
     elif (( $BEHIND )); then
-        branch_suffix="$ZSH_THEME_GIT_PROMPT_BEHIND"
+        branch_suffix="$ZCMDER_STRINGS[git_behind_postfix]"
     elif (( $AHEAD )); then
-        branch_suffix="$ZSH_THEME_GIT_PROMPT_AHEAD"
+        branch_suffix="$ZCMDER_STRINGS[git_ahead_postfix]"
     fi
 
-    local branch_modifier=""
-    if (( $UNMERGED+$UNTRACKED+$CHANGED )); then
-        branch_modifier="$ZSH_THEME_GIT_PROMPT_DIRTY"
-    fi
-
-    # determine what to color the branch based on status
-    if (( $UNMERGED )) || (( $DIVERGED )) || [[ $AHEAD -gt 0 && $BEHIND -gt 0 ]]; then
+    # get color based on local or remote
+    if (( $CHANGES > 0 && $CHANGES == $STAGED)); then
+        branch_color="$ZCMDER_COLORS[git_staged]"
+    elif (( $UNMERGED )) || (( $DIVERGED )) || [[ $AHEAD -gt 0 && $BEHIND -gt 0 ]]; then
         branch_color="$ZCMDER_COLORS[git_unmerged]"
     elif (( $UNTRACKED )); then
         branch_color="$ZCMDER_COLORS[git_untracked]"
-    elif (( $CHANGED )); then
+    elif (( $MODIFIED )); then
         branch_color="$ZCMDER_COLORS[git_modified]"
     fi
-    # check if all changes are staged
-    if __zcmder_git diff --exit-code &>/dev/null && ! __zcmder_git diff --cached --exit-code &>/dev/null; then
-        branch_color="$ZCMDER_COLORS[git_staged]"
-    fi
-    # if no modifier was set by this point, then repo is clean
-    # but don't set if this a new repo
-    [[ -z "$branch_modifier" && "$branch" != "$ZCMDER_STRINGS[git_label_new]" ]] && branch_modifier="$ZSH_THEME_GIT_PROMPT_CLEAN"
 
-    echo "$ZCMDER_STRINGS[git_separator]%{$fg[$branch_color]%}$ZCMDER_STRINGS[git_prefix]${branch:gs/%/%%}${upstream:gs/%/%%}$branch_modifier$branch_suffix$stash_modifier$ZCMDER_STRINGS[git_suffix]%{$reset_color%}"
+    # using locals here to make it more readable
+    local label="%{$fg[$branch_color]%}$ZCMDER_STRINGS[git_prefix]${branch:gs/%/%%}${remote:gs/%/%%}"
+    local modifiers="$branch_modifier$branch_suffix$stash_modifier$ZCMDER_STRINGS[git_suffix]"
+    echo "$ZCMDER_STRINGS[git_separator]$label$modifiers%{$reset_color%}"
 }
 
-__zcmder_pwd() {
+__zcmder_cwd() {
     [ -w "$(pwd)" ] && echo -n "%{$fg[$ZCMDER_COLORS[cwd]]%}" || echo -n "%{$fg[$ZCMDER_COLORS[cwd_readonly]]%}$ZCMDER_STRINGS[readonly_prefix]"
     print "%~%{$reset_color%}"
 }
@@ -167,7 +182,7 @@ __zcmder_precmd() {
 }
 add-zsh-hook precmd __zcmder_precmd
 
-PROMPT='$(__zcmder_pwd)$(__zcmder_git_prompt)
+PROMPT='$(__zcmder_cwd)$(__zcmder_git_prompt)
 %(?:%{$fg[$ZCMDER_COLORS[caret]]%}:%{$fg[$ZCMDER_COLORS[caret_error]]%})$(__zcmder_caret)%{$reset_color%} '
 PS2='%{$fg[$ZCMDER_COLORS[caret]]%}%_>%{$reset_color%} '
 PS3='%{$fg[$ZCMDER_COLORS[caret]]%}?>%{$reset_color%} '
