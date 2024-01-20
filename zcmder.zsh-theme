@@ -161,7 +161,7 @@ __zcmder_git_prompt() {
     fi
 
     # using locals here to make it more readable
-    local label="%{$fg[$branch_color]%}$ZCMDER_STRINGS[git_prefix]${branch:gs/%/%%}${remote:gs/%/%%}"
+    local label="%F{$branch_color]%}$ZCMDER_STRINGS[git_prefix]${branch:gs/%/%%}${remote:gs/%/%%}"
     local modifiers="$branch_modifier$branch_suffix$stash_modifier$ZCMDER_STRINGS[git_suffix]"
     echo "$ZCMDER_STRINGS[git_separator]$label$modifiers%{$reset_color%}"
 }
@@ -177,7 +177,7 @@ __zcmder_pyenv() {
         py="($(basename $VIRTUAL_ENV 2>/dev/null))"
     fi
     if [ -n "$py" ]; then
-        print "%{$fg[$ZCMDER_COLORS[python_env]]%}$py%{$reset_color%} "
+        print "%F{$ZCMDER_COLORS[python_env]%}$py%{$reset_color%} "
     fi
 }
 
@@ -189,7 +189,7 @@ __zcmder_username() {
     if ! $ZCMDER_COMPONENTS[hostname]; then
         sp=" "
     fi
-    print "%{$fg[$ZCMDER_COLORS[user_and_host]]%}%n%{$reset_color%}$sp"
+    print "%F{$ZCMDER_COLORS[user_and_host]%}%n%{$reset_color%}$sp"
 }
 
 __zcmder_hostname() {
@@ -200,14 +200,14 @@ __zcmder_hostname() {
     if $ZCMDER_COMPONENTS[username]; then
         sep="@"
     fi
-    print "%{$fg[$ZCMDER_COLORS[user_and_host]]%}$sep%M%{$reset_color%} "
+    print "%F{$ZCMDER_COLORS[user_and_host]%}$sep%M%{$reset_color%} "
 }
 
 __zcmder_cwd() {
     if ! $ZCMDER_COMPONENTS[cwd]; then
         return 0
     fi
-    [ -w "$(pwd)" ] && echo -n "%{$fg[$ZCMDER_COLORS[cwd]]%}" || echo -n "%{$fg[$ZCMDER_COLORS[cwd_readonly]]%}$ZCMDER_STRINGS[readonly_prefix]"
+    [ -w "$(pwd)" ] && echo -n "%F{$ZCMDER_COLORS[cwd]%}" || echo -n "%F{$ZCMDER_COLORS[cwd_readonly]%}$ZCMDER_STRINGS[readonly_prefix]"
     print "%~%{$reset_color%}"
 }
 
@@ -225,6 +225,6 @@ __zcmder_precmd() {
 add-zsh-hook precmd __zcmder_precmd
 
 PROMPT='$(__zcmder_pyenv)$(__zcmder_username)$(__zcmder_hostname)$(__zcmder_cwd)$(__zcmder_git_prompt)
-%(?:%{$fg[$ZCMDER_COLORS[caret]]%}:%{$fg[$ZCMDER_COLORS[caret_error]]%})$(__zcmder_caret)%{$reset_color%} '
-PS2='%{$fg[$ZCMDER_COLORS[caret]]%}%_>%{$reset_color%} '
-PS3='%{$fg[$ZCMDER_COLORS[caret]]%}?>%{$reset_color%} '
+%(?:%F{$ZCMDER_COLORS[caret]%}:%F{$ZCMDER_COLORS[caret_error]%})$(__zcmder_caret)%{$reset_color%} '
+PS2='%F{$ZCMDER_COLORS[caret]%}%_>%{$reset_color%} '
+PS3='%F{$ZCMDER_COLORS[caret]%}?>%{$reset_color%} '
