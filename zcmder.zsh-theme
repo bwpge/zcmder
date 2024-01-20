@@ -64,6 +64,9 @@ __zcmder_git() {
 }
 
 __zcmder_git_prompt() {
+    if [ ! $ZCMDER_COMPONENTS[git_status] ]; then
+        return 0
+    fi
     if ! __zcmder_git rev-parse --git-dir &> /dev/null \
         || [[ "$(__zcmder_git config --get oh-my-zsh.hide-info 2>/dev/null)" == 1 ]]; then
         return 0
@@ -164,7 +167,47 @@ __zcmder_git_prompt() {
     echo "$ZCMDER_STRINGS[git_separator]$label$modifiers%{$reset_color%}"
 }
 
+__zcmder_pyenv() {
+    if ! $ZCMDER_COMPONENTS[python_env]; then
+        return 0
+    fi
+    local py=""
+    if [ -n "$CONDA_PROMPT_MODIFIER" ]; then
+        py="$CONDA_PROMPT_MODIFIER"
+    elif [ -n "$VIRTUAL_ENV" ]; then
+        py="($(basename $VIRTUAL_ENV))"
+    fi
+    if [ -n "$py" ]; then
+        print "%{$fg[$ZCMDER_COLORS[python_env]]%}${py%%[[:space:]]*}%{$reset_color%} "
+    fi
+}
+
+__zcmder_username() {
+    if ! $ZCMDER_COMPONENTS[username]; then
+        return 0
+    fi
+    local sp=""
+    if ! $ZCMDER_COMPONENTS[hostname]; then
+        sp=" "
+    fi
+    print "%{$fg[$ZCMDER_COLORS[username]]%}%n%{$reset_color%}$sp"
+}
+
+__zcmder_hostname() {
+    if ! $ZCMDER_COMPONENTS[hostname]; then
+        return 0
+    fi
+    local sep=""
+    if $ZCMDER_COMPONENTS[username]; then
+        sep="@"
+    fi
+    print "%{$fg[$ZCMDER_COLORS[hostname]]%}$sep%M%{$reset_color%} "
+}
+
 __zcmder_cwd() {
+    if ! $ZCMDER_COMPONENTS[cwd]; then
+        return 0
+    fi
     [ -w "$(pwd)" ] && echo -n "%{$fg[$ZCMDER_COLORS[cwd]]%}" || echo -n "%{$fg[$ZCMDER_COLORS[cwd_readonly]]%}$ZCMDER_STRINGS[readonly_prefix]"
     print "%~%{$reset_color%}"
 }
@@ -182,7 +225,7 @@ __zcmder_precmd() {
 }
 add-zsh-hook precmd __zcmder_precmd
 
-PROMPT='$(__zcmder_cwd)$(__zcmder_git_prompt)
+PROMPT='$(__zcmder_pyenv)$(__zcmder_username)$(__zcmder_hostname)$(__zcmder_cwd)$(__zcmder_git_prompt)
 %(?:%{$fg[$ZCMDER_COLORS[caret]]%}:%{$fg[$ZCMDER_COLORS[caret_error]]%})$(__zcmder_caret)%{$reset_color%} '
 PS2='%{$fg[$ZCMDER_COLORS[caret]]%}%_>%{$reset_color%} '
 PS3='%{$fg[$ZCMDER_COLORS[caret]]%}?>%{$reset_color%} '
