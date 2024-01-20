@@ -88,7 +88,7 @@ __zcmder_git_prompt() {
 
     # set remote label (avoid git call if not needed)
     local remote=""
-    if [ ${ZCMDER_OPTIONS[git_show_remote]} ]; then
+    if ${ZCMDER_OPTIONS[git_show_remote]}; then
         remote=$(__zcmder_git rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null) \
             && remote=":${remote}"
     fi
