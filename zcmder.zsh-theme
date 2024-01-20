@@ -32,9 +32,8 @@ declare -A ZCMDER_COLORS=(
     [git_staged]="blue"
     [git_unmerged]="magenta"
     [git_untracked]="red"
-    [hostname]="blue"
     [python_env]="black"
-    [username]="blue"
+    [user_and_host]="blue"
 )
 
 declare -A ZCMDER_OPTIONS=(
@@ -173,12 +172,12 @@ __zcmder_pyenv() {
     fi
     local py=""
     if [ -n "$CONDA_PROMPT_MODIFIER" ]; then
-        py="$CONDA_PROMPT_MODIFIER"
+        py="${CONDA_PROMPT_MODIFIER%%[[:space:]]*}"
     elif [ -n "$VIRTUAL_ENV" ]; then
-        py="($(basename $VIRTUAL_ENV))"
+        py="($(basename $VIRTUAL_ENV 2>/dev/null))"
     fi
     if [ -n "$py" ]; then
-        print "%{$fg[$ZCMDER_COLORS[python_env]]%}${py%%[[:space:]]*}%{$reset_color%} "
+        print "%{$fg[$ZCMDER_COLORS[python_env]]%}$py%{$reset_color%} "
     fi
 }
 
@@ -190,7 +189,7 @@ __zcmder_username() {
     if ! $ZCMDER_COMPONENTS[hostname]; then
         sp=" "
     fi
-    print "%{$fg[$ZCMDER_COLORS[username]]%}%n%{$reset_color%}$sp"
+    print "%{$fg[$ZCMDER_COLORS[user_and_host]]%}%n%{$reset_color%}$sp"
 }
 
 __zcmder_hostname() {
@@ -201,7 +200,7 @@ __zcmder_hostname() {
     if $ZCMDER_COMPONENTS[username]; then
         sep="@"
     fi
-    print "%{$fg[$ZCMDER_COLORS[hostname]]%}$sep%M%{$reset_color%} "
+    print "%{$fg[$ZCMDER_COLORS[user_and_host]]%}$sep%M%{$reset_color%} "
 }
 
 __zcmder_cwd() {
