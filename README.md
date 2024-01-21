@@ -63,7 +63,7 @@ source $ZSH/oh-my-zsh.sh
 
 # zcmder options
 ZCMDER_COLORS[git_branch_default]='blue'  # use blue for default git branch color
-ZCMDER_COLORS[git_new_repo]='#2277ff'  # use RGB color for new repo
+ZCMDER_COLORS[git_new_repo]='#2277ff'  # use RGB value for new repo color
 ZCMDER_COMPONENTS[python_env]=false  # disable python env prefix
 ZCMDER_STRINGS[git_separator]=''  # remove ' on ' before git prompt
 ZCMDER_STRINGS[git_prefix]='■ '  # use different branch icon
@@ -137,7 +137,7 @@ Controls values or tokens in each component that are printed.
 |`git_ahead_postfix`| string | Printed when repo is ahead of upstream (initialized with `$ZSH_THEME_GIT_PROMPT_AHEAD`) |
 |`git_behind_postfix`| string | Printed when repo is behind upstream (initialized with `$ZSH_THEME_GIT_PROMPT_BEHIND`) |
 |`git_clean_postfix`| string | Printed when repo has no local changes (initialized with `$ZSH_THEME_GIT_PROMPT_CLEAN`) |
-|`git_dirty_postfix`| string | Printed when repo contains untracked (dirty) files (initialized with `$ZSH_THEME_GIT_PROMPT_DIRTY`) |
+|`git_dirty_postfix`| string | Printed when repo contains unstaged changes (initialized with `$ZSH_THEME_GIT_PROMPT_DIRTY`) |
 |`git_diverged_postfix`| string | Printed when repo is both ahead and behind (diverged from) upstream (initialized with `$ZSH_THEME_GIT_PROMPT_DIVERGED`) |
 |`git_label_new`| string | Label to use for a new repository |
 |`git_prefix`| string | Prefix always printed for git status e.g., a branch icon or `git(` (initialized with `$ZSH_THEME_GIT_PROMPT_PREFIX`) |
