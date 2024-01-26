@@ -11,7 +11,7 @@ if ! (( ${+ZCMDER_NO_MODIFY_ZSH_THEME} )); then
     ZSH_THEME_GIT_PROMPT_STASHED=" ⚑"
 fi
 
-unset ZCMDER_COLORS ZCMDER_COMPONENTS ZCMDER_OPTIONS ZCMDER_STRINGS
+unset ZCMDER_STYLES ZCMDER_COMPONENTS ZCMDER_OPTIONS ZCMDER_STRINGS
 
 declare -A ZCMDER_COMPONENTS=(
     [cwd]=true
@@ -21,19 +21,19 @@ declare -A ZCMDER_COMPONENTS=(
     [username]=false
 )
 
-declare -A ZCMDER_COLORS=(
-    [caret]="black"
-    [caret_error]="red"
-    [cwd]="green"
-    [cwd_readonly]="red"
-    [git_branch_default]="cyan"
-    [git_modified]="yellow"
-    [git_new_repo]="black"
-    [git_staged]="blue"
-    [git_unmerged]="magenta"
-    [git_untracked]="red"
-    [python_env]="black"
-    [user_and_host]="blue"
+declare -A ZCMDER_STYLES=(
+    [caret]="fg=8"
+    [caret_error]="fg=red"
+    [cwd]="fg=green"
+    [cwd_readonly]="fg=red"
+    [git_branch_default]="fg=cyan"
+    [git_modified]="fg=yellow"
+    [git_new_repo]="fg=black"
+    [git_staged]="fg=blue"
+    [git_unmerged]="fg=magenta"
+    [git_untracked]="fg=red"
+    [python_env]="fg=8"
+    [user_and_host]="fg=blue"
 )
 
 declare -A ZCMDER_OPTIONS=(
@@ -51,7 +51,7 @@ declare -A ZCMDER_STRINGS=(
     [git_diverged_postfix]="${ZSH_THEME_GIT_PROMPT_DIVERGED:- ↑↓}"
     [git_label_new]="(new)"
     [git_prefix]="${ZSH_THEME_GIT_PROMPT_PREFIX:- }"
-    [git_separator]=" on "
+    [git_separator]="on "
     [git_stashed_modifier]="${ZSH_THEME_GIT_PROMPT_STASHED:- ⚑}"
     [git_suffix]="${ZSH_THEME_GIT_PROMPT_SUFFIX:-}"
     [readonly_prefix]=" "
@@ -71,13 +71,13 @@ __zcmder_git_prompt() {
         return 0
     fi
 
-    local branch_color="$ZCMDER_COLORS[git_branch_default]"
+    local branch_style="$ZCMDER_STYLES[git_branch_default]"
     local branch=""
 
     # check if a new repo
     if [[ $(__zcmder_git rev-parse --abbrev-ref HEAD 2>/dev/null) == "HEAD" && -z "$(__zcmder_git rev-parse --short HEAD 2>/dev/null)" ]]; then
         branch="$ZCMDER_STRINGS[git_label_new]"
-        branch_color="$ZCMDER_COLORS[git_new_repo]"
+        branch_style="$ZCMDER_STYLES[git_new_repo]"
     # otherwise use a branch name/tag/commit sha
     else
         branch=$(__zcmder_git symbolic-ref --short HEAD 2>/dev/null) \
@@ -149,21 +149,55 @@ __zcmder_git_prompt() {
         branch_suffix="$ZCMDER_STRINGS[git_ahead_postfix]"
     fi
 
-    # get color based on local or remote
+    # get style based on local or remote
     if (( $CHANGES > 0 && $CHANGES == $STAGED)); then
-        branch_color="$ZCMDER_COLORS[git_staged]"
+        branch_style="$ZCMDER_STYLES[git_staged]"
     elif (( $UNMERGED )) || (( $DIVERGED )) || [[ $AHEAD -gt 0 && $BEHIND -gt 0 ]]; then
-        branch_color="$ZCMDER_COLORS[git_unmerged]"
+        branch_style="$ZCMDER_STYLES[git_unmerged]"
     elif (( $UNTRACKED )); then
-        branch_color="$ZCMDER_COLORS[git_untracked]"
+        branch_style="$ZCMDER_STYLES[git_untracked]"
     elif (( $MODIFIED )); then
-        branch_color="$ZCMDER_COLORS[git_modified]"
+        branch_style="$ZCMDER_STYLES[git_modified]"
     fi
 
     # using locals here to make it more readable
-    local label="%F{$branch_color]%}$ZCMDER_STRINGS[git_prefix]${branch:gs/%/%%}${remote:gs/%/%%}"
+    local label="$(__zcmder_gen_style $branch_style])$ZCMDER_STRINGS[git_prefix]${branch:gs/%/%%}${remote:gs/%/%%}"
     local modifiers="$branch_modifier$branch_suffix$stash_modifier$ZCMDER_STRINGS[git_suffix]"
     echo "$ZCMDER_STRINGS[git_separator]$label$modifiers%{$reset_color%}"
+}
+
+__zcmder_gen_style() {
+    if [ $# -lt 1 ]; then
+        return 0
+    fi
+
+    tokens=(${(@s/,/)1})
+
+    # invert and standout effect must be printed first
+    if [[ ${tokens[(ie)standout]} -le ${#tokens} ]]; then
+        print -n '%S'
+    elif [[ ${tokens[(ie)invert]} -le ${#tokens} ]]; then
+        print -n '\x1b[7m'
+    fi
+
+    for token in $tokens; do
+        case "$token" in
+            'fg='*)
+                split=(${(@s/=/)token})
+                print -n "%F{$split[2]%}";;
+            'bg='*)
+                split=(${(@s/=/)token})
+                print -n "%K{$split[2]%}";;
+            'bold')
+                print -n '%B';;
+            'dim')
+                print -n '\x1b[2m';;
+            'italic')
+                print -n '\x1b[3m';;
+            'underline')
+                print -n '%U';;
+        esac
+    done
 }
 
 __zcmder_pyenv() {
@@ -177,7 +211,7 @@ __zcmder_pyenv() {
         py="($(basename $VIRTUAL_ENV 2>/dev/null))"
     fi
     if [ -n "$py" ]; then
-        print "%F{$ZCMDER_COLORS[python_env]%}$py%{$reset_color%} "
+        print "$(__zcmder_gen_style $ZCMDER_STYLES[python_env])$py%{$reset_color%} "
     fi
 }
 
@@ -189,7 +223,7 @@ __zcmder_username() {
     if ! $ZCMDER_COMPONENTS[hostname]; then
         sp=" "
     fi
-    print "%F{$ZCMDER_COLORS[user_and_host]%}%n%{$reset_color%}$sp"
+    print "$(__zcmder_gen_style $ZCMDER_STYLES[user_and_host])%n%{$reset_color%}$sp"
 }
 
 __zcmder_hostname() {
@@ -200,19 +234,21 @@ __zcmder_hostname() {
     if $ZCMDER_COMPONENTS[username]; then
         sep="@"
     fi
-    print "%F{$ZCMDER_COLORS[user_and_host]%}$sep%M%{$reset_color%} "
+    print "$(__zcmder_gen_style $ZCMDER_STYLES[user_and_host])$sep%M%{$reset_color%} "
 }
 
 __zcmder_cwd() {
     if ! $ZCMDER_COMPONENTS[cwd]; then
         return 0
     fi
-    [ -w "$(pwd)" ] && echo -n "%F{$ZCMDER_COLORS[cwd]%}" || echo -n "%F{$ZCMDER_COLORS[cwd_readonly]%}$ZCMDER_STRINGS[readonly_prefix]"
-    print "%~%{$reset_color%}"
+    [ -w "$(pwd)" ] && print -n "$(__zcmder_gen_style $ZCMDER_STYLES[cwd])" ||
+        print -n "$(__zcmder_gen_style $ZCMDER_STYLES[cwd_readonly])$ZCMDER_STRINGS[readonly_prefix]"
+    print "%~%{$reset_color%} "
 }
 
 __zcmder_caret() {
-    print "%(!.$ZCMDER_STRINGS[caret_root].$ZCMDER_STRINGS[caret])"
+    style="$ZCMDER_STYLES[$1]"
+    print -n "$(__zcmder_gen_style $style)%(!.$ZCMDER_STRINGS[caret_root].$ZCMDER_STRINGS[caret])"
 }
 
 # see: https://stackoverflow.com/a/60790101
@@ -224,7 +260,8 @@ __zcmder_precmd() {
 }
 add-zsh-hook precmd __zcmder_precmd
 
+# "%(?.caret.caret_error)"
 PROMPT='$(__zcmder_pyenv)$(__zcmder_username)$(__zcmder_hostname)$(__zcmder_cwd)$(__zcmder_git_prompt)
-%(?:%F{$ZCMDER_COLORS[caret]%}:%F{$ZCMDER_COLORS[caret_error]%})$(__zcmder_caret)%{$reset_color%} '
-PS2='%F{$ZCMDER_COLORS[caret]%}%_>%{$reset_color%} '
-PS3='%F{$ZCMDER_COLORS[caret]%}?>%{$reset_color%} '
+%(?.$(__zcmder_caret caret).$(__zcmder_caret caret_error))%{$reset_color%} '
+PS2='$(__zcmder_gen_style $ZCMDER_STYLES[caret])%_>%{$reset_color%} '
+PS3='$(__zcmder_gen_style $ZCMDER_STYLES[caret])?>%{$reset_color%} '

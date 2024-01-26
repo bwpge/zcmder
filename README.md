@@ -49,7 +49,7 @@ Be sure to reload (e.g., `omz reload`) or source the new file (e.g., `source zcm
 Environment variables used by this theme are always prefixed with `ZCMDER_`. This theme uses following associative arrays:
 
 - [`ZCMDER_COMPONENTS`](#zcmder_components)
-- [`ZCMDER_COLORS`](#zcmder_colors)
+- [`ZCMDER_STYLES`](#zcmder_styles)
 - [`ZCMDER_OPTIONS`](#zcmder_options)
 - [`ZCMDER_STRINGS`](#zcmder_strings)
 
@@ -62,10 +62,11 @@ ZSH_THEME=zcmder/zcmder
 source $ZSH/oh-my-zsh.sh
 
 # zcmder options
-ZCMDER_COLORS[git_branch_default]='blue'  # use blue for default git branch color
-ZCMDER_COLORS[git_new_repo]='#2277ff'  # use RGB value for new repo color
-ZCMDER_COMPONENTS[python_env]=false  # disable python env prefix
-ZCMDER_STRINGS[git_separator]=''  # remove ' on ' before git prompt
+ZCMDER_STYLES[cwd]="fg=green,underline" # use green fg and underline effect on cwd
+ZCMDER_STYLES[git_branch_default]='fg=blue'  # use blue for default git branch color
+ZCMDER_STYLES[git_new_repo]='bg=#2277ff,standout'  # use RGB value for new repo bg color
+ZCMDER_COMPONENTS[python_env]=false  # disable python env component
+ZCMDER_STRINGS[git_separator]=''  # don't print 'on ' before git prompt
 ZCMDER_STRINGS[git_prefix]='■ '  # use different branch icon
 ```
 
@@ -83,17 +84,44 @@ Controls which components or segments of the prompt are printed.
 | `python_env` | bool | Print the current python environment (`conda`or `venv`) in the prompt |
 | `username` | bool | Print the username (zsh expanded `%n`) in the prompt |
 
-### `ZCMDER_COLORS`
+### `ZCMDER_STYLES`
 
-Controls colors of the various items in the prompt.
+Controls colors and text effects of the various items in the prompt.
 
-Valid colors have the following form (see [`fg` section of *Character Highlighting* in `man zshzle`](https://zsh.sourceforge.io/Doc/Release/Zsh-Line-Editor.html#Character-Highlighting) for more information):
+This associative array uses very similar syntax as "types of highlighting" in [`zshzle(1)`](https://zsh.sourceforge.io/Doc/Release/Zsh-Line-Editor.html#Character-Highlighting):
+
+- Values must be a string
+- Tokens are separated by commas (without leading or trailing spaces)
+
+Valid style tokens:
+
+- `fg=<color>`: see below for color formats
+- `bg=<color>`: same as `fg`
+- `bold`: render bold or "intense" text (some terminals render this with "bright" colors and no font weight)
+- `dim`: render faint text (some terminals treat this as bold)
+- `italic`: render italicized text (some terminals treat this as inverse or blink effect)
+- `underline`: render underlined text
+- `standout`: uses zsh's `%S` prompt expansion for the terminal's standout mode, typically "reverse video" (see `invert`)
+- `invert`: explicitly writes `\x1b[7m` for reverse video (not supported by all terminals)
+    - Note: prefer using `standout`
+    - If both `standout` and `invert` are specified in a style, `invert` is ignored
+
+Valid colors have the following form (see [`fg` section of *Character Highlighting* in `zshzle(1)`](https://zsh.sourceforge.io/Doc/Release/Zsh-Line-Editor.html#Character-Highlighting) for more information):
 
 - Common name (`black`, `red`, `green`, `yellow`, `blue`, `magenta`, `cyan` and `white`)
-- 256-color integer value (e.g., `8` for "bright black" or `142` for `Gold3`)
-- Hex RGB format `#RRGGBB`
+- 256-color integer value (e.g., `8` for "bright black" or `142` for `Gold3`, see [this reference](https://ss64.com/bash/syntax-colors.html))
+- Hex RGB string `#RRGGBB`
 
-Git status colors have the following priority:
+Example usage:
+
+```sh
+# green and bold text, inverted (green/default-bg swapped)
+ZCMDER_STYLES[cwd]='fg=2,bold,standout'
+# white on black in italic/underline
+ZCMDER_STYLES[cwd]='fg=#ffffff,bg=#000000,italic,underline'
+```
+
+Git status styles have the following priority:
 
 - `git_staged`
 - `git_unmerged`
@@ -104,18 +132,18 @@ Git status colors have the following priority:
 
 | Key | Type | Usage |
 | --- | ---- | ----- |
-| `caret` | color | Default caret color |
-| `caret_error` | color | Caret color when the last exit code was non-zero |
-| `cwd` | color | Color of the current working directory |
-| `cwd_readonly` | color | Color when the current working directory is read-only |
-| `git_branch_default` | color | Default git status color |
-| `git_modified` | color | Git status color when only tracked files are modified |
-| `git_new_repo` | color | Git status color when in a new repository |
-| `git_staged` | color | Git status color when all local changes are staged |
-| `git_unmerged` |color | Git status when there are unmerged changes |
-| `git_untracked` | color | Git status when untracked (dirty) files are present |
-| `python_env` | color | The color for current python environment name |
-| `user_and_host` | color | Color for both username and hostname components |
+| `caret` | style | Default caret style |
+| `caret_error` | style | Caret style when the last exit code was non-zero |
+| `cwd` | style | style of the current working directory |
+| `cwd_readonly` | style | style when the current working directory is read-only |
+| `git_branch_default` | style | Default git status style |
+| `git_modified` | style | Git status style when only tracked files are modified |
+| `git_new_repo` | style | Git status style when in a new repository |
+| `git_staged` | style | Git status style when all local changes are staged |
+| `git_unmerged` | style | Git status when there are unmerged changes |
+| `git_untracked` | style | Git status when untracked (dirty) files are present |
+| `python_env` | style | The style for current python environment name |
+| `user_and_host` | style | style for both username and hostname components |
 
 ### `ZCMDER_OPTIONS`
 
