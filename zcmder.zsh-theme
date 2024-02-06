@@ -1,6 +1,6 @@
 # set zsh theme options unless disabled
 if ! (( ${+ZCMDER_NO_MODIFY_ZSH_THEME} )); then
-    ZSH_THEME_GIT_PROMPT_PREFIX=" "
+    ZSH_THEME_GIT_PROMPT_PREFIX=" "
     ZSH_THEME_GIT_PROMPT_SUFFIX=""
     ZSH_THEME_GIT_PROMPT_DIRTY=" *"
     ZSH_THEME_GIT_PROMPT_CLEAN=" ✓"
