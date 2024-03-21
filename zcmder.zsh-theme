@@ -205,8 +205,8 @@ __zcmder_pyenv() {
         return 0
     fi
     local py=""
-    if [ -n "$CONDA_PROMPT_MODIFIER" ]; then
-        py="${CONDA_PROMPT_MODIFIER%%[[:space:]]*}"
+    if [ -n "$CONDA_DEFAULT_ENV" ]; then
+        py="${CONDA_DEFAULT_ENV%%[[:space:]]*}"
     elif [ -n "$VIRTUAL_ENV" ]; then
         py="($(basename $VIRTUAL_ENV 2>/dev/null))"
     fi
