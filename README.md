@@ -74,7 +74,12 @@ The following tables explains each option and usage.
 
 ### `ZCMDER_COMPONENTS`
 
-Controls which components or segments of the prompt are printed.
+Controls which components or segments of the prompt are printed. These values are evaluated with [arithmetic evaluation](https://zsh.sourceforge.io/Doc/Release/Arithmetic-Evaluation.html) (e.g., `(( $foo ))`), so to disable a component set the value to `0`. To enable it, use a non-zero value:
+
+```sh
+ZCMDER_COMPONENTS[git_status]=0  # disable git prompt
+ZCMDER_COMPONENTS[username]=1    # enable username
+```
 
 | Key | Type | Usage |
 | --- | ---- | ----- |

@@ -14,11 +14,11 @@ fi
 unset ZCMDER_STYLES ZCMDER_COMPONENTS ZCMDER_OPTIONS ZCMDER_STRINGS
 
 declare -A ZCMDER_COMPONENTS=(
-    [cwd]=true
-    [git_status]=true
-    [hostname]=false
-    [python_env]=true
-    [username]=false
+    [cwd]=1
+    [git_status]=1
+    [hostname]=0
+    [python_env]=1
+    [username]=0
 )
 
 declare -A ZCMDER_STYLES=(
@@ -63,7 +63,7 @@ __zcmder_git() {
 }
 
 __zcmder_git_prompt() {
-    if [ ! $ZCMDER_COMPONENTS[git_status] ]; then
+    if ! (( $ZCMDER_COMPONENTS[git_status] )); then
         return 0
     fi
     if ! __zcmder_git rev-parse --git-dir &> /dev/null \
@@ -201,12 +201,12 @@ __zcmder_gen_style() {
 }
 
 __zcmder_pyenv() {
-    if ! $ZCMDER_COMPONENTS[python_env]; then
+    if ! (( $ZCMDER_COMPONENTS[python_env] )); then
         return 0
     fi
     local py=""
     if [ -n "$CONDA_DEFAULT_ENV" ]; then
-        py="${CONDA_DEFAULT_ENV%%[[:space:]]*}"
+        py="(${CONDA_DEFAULT_ENV%%[[:space:]]*})"
     elif [ -n "$VIRTUAL_ENV" ]; then
         py="($(basename $VIRTUAL_ENV 2>/dev/null))"
     fi
@@ -216,29 +216,29 @@ __zcmder_pyenv() {
 }
 
 __zcmder_username() {
-    if ! $ZCMDER_COMPONENTS[username]; then
+    if ! (( $ZCMDER_COMPONENTS[username] )); then
         return 0
     fi
     local sp=""
-    if ! $ZCMDER_COMPONENTS[hostname]; then
+    if ! (( $ZCMDER_COMPONENTS[hostname] )); then
         sp=" "
     fi
     print "$(__zcmder_gen_style $ZCMDER_STYLES[user_and_host])%n%{$reset_color%}$sp"
 }
 
 __zcmder_hostname() {
-    if ! $ZCMDER_COMPONENTS[hostname]; then
+    if ! (( $ZCMDER_COMPONENTS[hostname] )); then
         return 0
     fi
     local sep=""
-    if $ZCMDER_COMPONENTS[username]; then
+    if (( $ZCMDER_COMPONENTS[username] )); then
         sep="@"
     fi
     print "$(__zcmder_gen_style $ZCMDER_STYLES[user_and_host])$sep%M%{$reset_color%} "
 }
 
 __zcmder_cwd() {
-    if ! $ZCMDER_COMPONENTS[cwd]; then
+    if ! (( $ZCMDER_COMPONENTS[cwd] )); then
         return 0
     fi
     [ -w "$(pwd)" ] && print -n "$(__zcmder_gen_style $ZCMDER_STYLES[cwd])" ||
